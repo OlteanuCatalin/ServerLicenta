@@ -1,80 +1,170 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="stylesheet" href="/static/style.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-Time Sensor Graphs</title>
+    <title>Real-Time Sensor Graphs & Search</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>  <!-- ✅ Load Chart.js -->
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; }
-        canvas { max-width: 700px; margin: 20px auto; }
-    </style>
+
+    
 </head>
 <body>
-    <h1>Real-Time Sensor Graphs</h1>
-    <p><a href="/display">View Data Tables</a></p>  <!-- ✅ Link to Tables -->
+    <h1>Real-Time Sensor Graphs & Search</h1>
+    <p><a href="/display">View Full Data Tables</a></p>  <!-- ✅ Link to Full Data Tables -->
 
-    <!-- ✅ Graphs on the Main Page -->
-    <h2>LPG Levels Over Time</h2>
-    <canvas id="lpgChart"></canvas>
+    <!-- ✅ Two-column layout (Search Left, Graphs Right) -->
+    <div id="main-container">
+        <!-- ✅ Search Menu (Left) -->
+        <div id="search-container">
+            <h2>Search Readings by Date</h2>
+            <form id="searchForm">
+                <label for="searchDate">Select Date:</label>
+                <input type="date" id="searchDate" required>
+                <button type="submit">Search</button>
+            </form>
 
-    <h2>CO Levels Over Time</h2>
-    <canvas id="coChart"></canvas>
+            <!-- ✅ Search Results Table -->
+            <h3>Search Results</h3>
+            <table id="searchResults">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>LPG</th>
+                        <th>CO</th>
+                        <th>Methane</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <div id="paginationControls"></div>
+        </div>
 
-    <h2>Methane Levels Over Time</h2>
-    <canvas id="methaneChart"></canvas>
+        <!-- ✅ Graphs (Right) -->
+        <div id="graph-container">
+            <h2>LPG Levels Over Time</h2>
+            <canvas id="lpgChart"></canvas>
+
+            <h2>CO Levels Over Time</h2>
+            <canvas id="coChart"></canvas>
+
+            <h2>Methane Levels Over Time</h2>
+            <canvas id="methaneChart"></canvas>
+        </div>
+    </div>
 
     <script>
-        // ✅ Initialize Graphs
-        const ctxLPG = document.getElementById("lpgChart").getContext("2d");
-        const ctxCO = document.getElementById("coChart").getContext("2d");
-        const ctxMethane = document.getElementById("methaneChart").getContext("2d");
+        let currentPage = 1;
+        let selectedDate = null;
+    
+         // ✅ Initialize Graphs Before Updating
+    const ctxLPG = document.getElementById("lpgChart").getContext("2d");
+    const ctxCO = document.getElementById("coChart").getContext("2d");
+    const ctxMethane = document.getElementById("methaneChart").getContext("2d");
 
-        let lpgChart = new Chart(ctxLPG, {
-            type: "line",
-            data: { labels: [], datasets: [{ label: "LPG (ppm)", borderColor: "red", data: [] }] },
-            options: { responsive: true }
-        });
+    let lpgChart = new Chart(ctxLPG, {
+        type: "line",
+        data: { labels: [], datasets: [{ label: "LPG (ppm)", borderColor: "red", data: [] }] },
+        options: { responsive: true }
+    });
 
-        let coChart = new Chart(ctxCO, {
-            type: "line",
-            data: { labels: [], datasets: [{ label: "CO (ppm)", borderColor: "blue", data: [] }] },
-            options: { responsive: true }
-        });
+    let coChart = new Chart(ctxCO, {
+        type: "line",
+        data: { labels: [], datasets: [{ label: "CO (ppm)", borderColor: "blue", data: [] }] },
+        options: { responsive: true }
+    });
 
-        let methaneChart = new Chart(ctxMethane, {
-            type: "line",
-            data: { labels: [], datasets: [{ label: "Methane (ppm)", borderColor: "green", data: [] }] },
-            options: { responsive: true }
-        });
+    let methaneChart = new Chart(ctxMethane, {
+        type: "line",
+        data: { labels: [], datasets: [{ label: "Methane (ppm)", borderColor: "green", data: [] }] },
+        options: { responsive: true }
+    });
 
+    // ✅ Ensure fetchSensorData() runs AFTER charts are initialized
+    setInterval(fetchSensorData, 5000);
+    fetchSensorData();  // ✅ Load graphs on page load
+
+        // ✅ Fetch and display real-time graphs
         function fetchSensorData() {
-            fetch('/data')  // ✅ Request JSON data from Flask
+            fetch('/data')
                 .then(response => response.json())
                 .then(data => {
-                    const timestamps = data.mq2_sensor.map(row => row.timestamp).reverse();  // ✅ Time labels
-
+                    const timestamps = data.mq2_sensor.map(row => row.timestamp).reverse();
+    
                     // ✅ Update LPG Chart
                     lpgChart.data.labels = timestamps;
                     lpgChart.data.datasets[0].data = data.mq2_sensor.map(row => row.LPG).reverse();
                     lpgChart.update();
-
+    
                     // ✅ Update CO Chart
                     coChart.data.labels = timestamps;
                     coChart.data.datasets[0].data = data.mq2_sensor.map(row => row.CO).reverse();
                     coChart.update();
-
+    
                     // ✅ Update Methane Chart
                     methaneChart.data.labels = timestamps;
                     methaneChart.data.datasets[0].data = data.mq2_sensor.map(row => row.Methane).reverse();
                     methaneChart.update();
                 })
-                .catch(error => console.error("Error fetching data:", error));
+                .catch(error => console.error("Error fetching graph data:", error));
         }
-
-        // ✅ Auto-refresh data every 5 seconds
+    
+        // ✅ Auto-refresh graphs every 5 seconds
         setInterval(fetchSensorData, 5000);
-        fetchSensorData();  // ✅ Load data immediately on page load
+        fetchSensorData();  // ✅ Load graphs on page load
+    
+        // ✅ Fetch and display search results
+        document.getElementById("searchForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            selectedDate = document.getElementById("searchDate").value;
+            currentPage = 1;
+            fetchSearchResults();
+        });
+    
+        function fetchSearchResults() {
+            fetch(`/search_data?date=${selectedDate}&page=${currentPage}`)
+                .then(response => response.json())
+                .then(data => {
+                    let tableBody = document.querySelector("#searchResults tbody");
+                    tableBody.innerHTML = "";  
+    
+                    data.mq2_sensor.forEach(row => {
+                        let newRow = `<tr>
+                            <td>${row.time}</td>
+                            <td>${row.LPG}</td>
+                            <td>${row.CO}</td>
+                            <td>${row.Methane}</td>
+                        </tr>`;
+                        tableBody.innerHTML += newRow;
+                    });
+    
+                    updatePaginationControls(data.page, data.total_pages);
+                })
+                .catch(error => console.error("Error fetching search data:", error));
+        }
+    
+        function updatePaginationControls(current, total) {
+            let paginationDiv = document.getElementById("paginationControls");
+            paginationDiv.innerHTML = "";  
+    
+            if (current > 1) {
+                paginationDiv.innerHTML += `<button onclick="changePage(${current - 1})">Previous</button>`;
+            }
+    
+            paginationDiv.innerHTML += ` Page ${current} of ${total} `;
+    
+            if (current < total) {
+                paginationDiv.innerHTML += `<button onclick="changePage(${current + 1})">Next</button>`;
+            }
+        }
+    
+        function changePage(newPage) {
+            currentPage = newPage;
+            fetchSearchResults();
+        }
     </script>
+    
+    
+
 </body>
 </html>
