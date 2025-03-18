@@ -77,6 +77,3 @@ def get_all_sensor_data():
         "co_sensor": [{"timestamp": row[0], "CO": row[1]} for row in co_data],
         "methane_sensor": [{"timestamp": row[0], "Methane": row[1]} for row in methane_data],
     })
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
