@@ -5,17 +5,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Real-Time Sensor Graphs & Search</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>  <!-- ✅ Load Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>  
 
     
 </head>
 <body>
     <h1>Real-Time Sensor Graphs & Search</h1>
-    <p><a href="/display">View Full Data Tables</a></p>  <!-- ✅ Link to Full Data Tables -->
+    <p><a href="/display">View Full Data Tables</a></p>  
 
-    <!-- ✅ Two-column layout (Search Left, Graphs Right) -->
+    
     <div id="main-container">
-        <!-- ✅ Search Menu (Left) -->
+      
         <div id="search-container">
             <h2>Search Readings by Date</h2>
             <form id="searchForm">
@@ -24,7 +24,7 @@
                 <button type="submit">Search</button>
             </form>
 
-            <!-- ✅ Search Results Table -->
+           
             <h3>Search Results</h3>
             <table id="searchResults">
                 <thead>
@@ -40,7 +40,7 @@
             <div id="paginationControls"></div>
         </div>
 
-        <!-- ✅ Graphs (Right) -->
+       
         <div id="graph-container">
             <h2>LPG Levels Over Time</h2>
             <canvas id="lpgChart"></canvas>
@@ -57,7 +57,6 @@
         let currentPage = 1;
         let selectedDate = null;
     
-         // ✅ Initialize Graphs Before Updating
     const ctxLPG = document.getElementById("lpgChart").getContext("2d");
     const ctxCO = document.getElementById("coChart").getContext("2d");
     const ctxMethane = document.getElementById("methaneChart").getContext("2d");
