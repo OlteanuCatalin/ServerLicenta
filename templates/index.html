@@ -16,6 +16,21 @@
     
     <div id="main-container">
       
+        <div id="graph-container">
+            <div>
+                <h2>LPG Levels</h2>
+                <canvas id="lpgChart"></canvas>
+            </div>
+            <div>
+                <h2>CO Levels</h2>
+                <canvas id="coChart"></canvas>
+            </div>
+            <div>
+                <h2>Methane Levels</h2>
+                <canvas id="methaneChart"></canvas>
+            </div>
+        </div>
+
         <div id="search-container">
             <h2>Search Readings by Date</h2>
             <form id="searchForm">
@@ -23,8 +38,8 @@
                 <input type="date" id="searchDate" required>
                 <button type="submit">Search</button>
             </form>
-
-           
+    
+            <!-- ✅ Search Results Table -->
             <h3>Search Results</h3>
             <table id="searchResults">
                 <thead>
@@ -40,19 +55,6 @@
             <div id="paginationControls"></div>
         </div>
 
-       
-        <div id="graph-container">
-            <h2>LPG Levels Over Time</h2>
-            <canvas id="lpgChart"></canvas>
-
-            <h2>CO Levels Over Time</h2>
-            <canvas id="coChart"></canvas>
-
-            <h2>Methane Levels Over Time</h2>
-            <canvas id="methaneChart"></canvas>
-        </div>
-    </div>
-
     <script>
         let currentPage = 1;
         let selectedDate = null;
@@ -60,23 +62,34 @@
     const ctxLPG = document.getElementById("lpgChart").getContext("2d");
     const ctxCO = document.getElementById("coChart").getContext("2d");
     const ctxMethane = document.getElementById("methaneChart").getContext("2d");
+        
+    let chartOptions = {
+        responsive: true,
+        plugins: {
+            legend: { labels: { color: "black" } }  // ✅ Legend text stays black
+        },
+        scales: {
+            x: { ticks: { color: "black" } },  // ✅ X-axis text remains visible
+            y: { ticks: { color: "black" } }   // ✅ Y-axis text remains visible
+        }
+    };
 
     let lpgChart = new Chart(ctxLPG, {
         type: "line",
-        data: { labels: [], datasets: [{ label: "LPG (ppm)", borderColor: "red", data: [] }] },
-        options: { responsive: true }
+        data: { labels: [], datasets: [{ label: "LPG (ppm)", borderColor: "red", backgroundColor: "white", data: [] }] },
+        options: chartOptions
     });
 
     let coChart = new Chart(ctxCO, {
         type: "line",
-        data: { labels: [], datasets: [{ label: "CO (ppm)", borderColor: "blue", data: [] }] },
-        options: { responsive: true }
+        data: { labels: [], datasets: [{ label: "CO (ppm)", borderColor: "blue", backgroundColor: "white", data: [] }] },
+        options: chartOptions
     });
 
     let methaneChart = new Chart(ctxMethane, {
         type: "line",
-        data: { labels: [], datasets: [{ label: "Methane (ppm)", borderColor: "green", data: [] }] },
-        options: { responsive: true }
+        data: { labels: [], datasets: [{ label: "Methane (ppm)", borderColor: "green", backgroundColor: "white", data: [] }] },
+        options: chartOptions
     });
 
     // ✅ Ensure fetchSensorData() runs AFTER charts are initialized
