@@ -1,115 +1,137 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" href="/static/style.css">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-Time Sensor Data</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Real-Time Sensor Data</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to bottom, #1e3c72, #2a5298);
+      color: white;
+      min-height: 100vh;
+    }
+
+    #sliderContainer {
+  margin: 10px auto 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+    }
+#rowSlider {
+  width: 200px;
+}
+
+    h1, h2 {
+      margin-top: 20px;
+    }
+
+    #searchContainer {
+      margin: 20px auto;
+    }
+
+    #searchInput {
+      padding: 8px;
+      font-size: 16px;
+      width: 250px;
+      border-radius: 5px;
+      border: none;
+    }
+
+    table {
+      width: 70%;
+      margin: 10px auto;
+      border-collapse: collapse;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      background-color: rgba(27, 59, 111, 0.85);
+    }
+
+    th {
+      background-color: rgba(51, 122, 183, 0.95);
+    }
+  </style>
 </head>
 <body>
-    <h1>Real-Time Sensor Data</h1>
+  <h1>Real-Time Sensor Data</h1>
 
-    <h2>MQ2 Sensor Data</h2>
-    <table id="mq2Table">
-        <thead>
+  <h2>Sensor Data</h2>
+
+    <div id="sliderContainer">
+  <label for="rowSlider">Number of rows:</label>
+  <input type="range" id="rowSlider" min="1" max="100" value="10" step="1">
+  <span id="rowCount">10</span>
+</div>
+
+  <div id="searchContainer">
+    <input type="text" id="searchInput" placeholder="Search by timestamp, LPG, CO, Methane...">
+  </div>
+
+  <table id="mq2Table">
+    <thead>
+      <tr>
+        <th>Timestamp</th>
+        <th>LPG (ppm)</th>
+        <th>CO (ppm)</th>
+        <th>Methane (ppm)</th>
+      </tr>
+    </thead>
+    <tbody>
+      
+    </tbody>
+  </table>
+
+  <script>
+  
+  document.addEventListener("DOMContentLoaded", () => {
+    const input = document.getElementById("searchInput");
+    const slider = document.getElementById("rowSlider");
+    const rowCount = document.getElementById("rowCount");
+
+    slider.addEventListener("input", () => {
+      const limit = slider.value;
+      rowCount.textContent = limit;
+      fetchSensorData(limit);
+    });
+
+    input.addEventListener("keyup", () => {
+      const filter = input.value.toLowerCase();
+      const rows = document.querySelectorAll("#mq2Table tbody tr");
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(filter) ? "" : "none";
+      });
+    });
+
+    fetchSensorData(slider.value);
+  });
+
+  function fetchSensorData(limit) {
+    fetch(`/data?limit=${limit}`)
+      .then(response => response.json())
+      .then(data => {
+        const mq2TableBody = document.querySelector("#mq2Table tbody");
+        mq2TableBody.innerHTML = "";
+        data.mq2_sensor.forEach(row => {
+          mq2TableBody.innerHTML += `
             <tr>
-                <th>Timestamp</th>
-                <th>LPG (ppm)</th>
-                <th>CO (ppm)</th>
-                <th>Methane (ppm)</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Data will be inserted here dynamically -->
-        </tbody>
-    </table>
-
-    <h2>LPG Sensor Data</h2>
-    <table id="lpgTable">
-        <thead>
-            <tr>
-                <th>Timestamp</th>
-                <th>LPG (ppm)</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-
-    <h2>CO Sensor Data</h2>
-    <table id="coTable">
-        <thead>
-            <tr>
-                <th>Timestamp</th>
-                <th>CO (ppm)</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-
-    <h2>Methane Sensor Data</h2>
-    <table id="methaneTable">
-        <thead>
-            <tr>
-                <th>Timestamp</th>
-                <th>Methane (ppm)</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-
-    <script>
-        function fetchSensorData() {
-            fetch('/data')
-                .then(response => response.json())
-                .then(data => {
-                    let mq2TableBody = document.querySelector("#mq2Table tbody");
-                    mq2TableBody.innerHTML = "";  
-                    data.mq2_sensor.forEach(row => {
-                        let newRow = `<tr>
-                            <td>${row.timestamp}</td>
-                            <td>${row.LPG}</td>
-                            <td>${row.CO}</td>
-                            <td>${row.Methane}</td>
-                        </tr>`;
-                        mq2TableBody.innerHTML += newRow;
-                    });
-
-                   
-                    let lpgTableBody = document.querySelector("#lpgTable tbody");
-                    lpgTableBody.innerHTML = "";  
-                    data.lpg_sensor.forEach(row => {
-                        let newRow = `<tr>
-                            <td>${row.timestamp}</td>
-                            <td>${row.LPG}</td>
-                        </tr>`;
-                        lpgTableBody.innerHTML += newRow;
-                    });
-
-                 
-                    let coTableBody = document.querySelector("#coTable tbody");
-                    coTableBody.innerHTML = "";  
-                    data.co_sensor.forEach(row => {
-                        let newRow = `<tr>
-                            <td>${row.timestamp}</td>
-                            <td>${row.CO}</td>
-                        </tr>`;
-                        coTableBody.innerHTML += newRow;
-                    });
-
-                    let methaneTableBody = document.querySelector("#methaneTable tbody");
-                    methaneTableBody.innerHTML = ""; 
-                    data.methane_sensor.forEach(row => {
-                        let newRow = `<tr>
-                            <td>${row.timestamp}</td>
-                            <td>${row.Methane}</td>
-                        </tr>`;
-                        methaneTableBody.innerHTML += newRow;
-                    });
-                })
-                .catch(error => console.error("Error fetching data:", error));
-        }
-        setInterval(fetchSensorData, 2000);
-        fetchSensorData(); 
-    </script>
+              <td>${row.timestamp}</td>
+              <td>${row.LPG}</td>
+              <td>${row.CO}</td>
+              <td>${row.Methane}</td>
+            </tr>`;
+        });
+      })
+      .catch(error => console.error("Error fetching data:", error));
+  }
+</script>
 </body>
 </html>

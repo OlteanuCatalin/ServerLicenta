@@ -1,182 +1,285 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" href="/static/style.css">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-Time Sensor Graphs & Search</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>  
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Real-Time Sensor Graphs & Search</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom, #1e3c72, #2a5298);
+      color: white;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
 
-    
+    h1, h2 {
+      margin-top: 20px;
+    }
+
+    #main-container {
+      padding: 20px;
+    }
+
+    .chart-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.chart-box {
+  width: 500px;
+}
+
+canvas {
+  background: white;
+  display: block;
+  border-radius: 10px;
+  width: 100%;
+  height: 300px;
+}
+
+    canvas {
+      background: white;
+      margin: 20px auto;
+      display: block;
+      max-width: 700px;
+      border-radius: 10px;
+    }
+
+    #search-container {
+      margin-top: 40px;
+    }
+
+    form {
+      margin-bottom: 20px;
+    }
+
+    input[type="date"] {
+      padding: 8px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 8px 14px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    table {
+      margin: 0 auto;
+      border-collapse: collapse;
+      background: white;
+      color: black;
+      width: 80%;
+      max-width: 700px;
+    }
+
+    th, td {
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+    }
+
+    th {
+      background-color: #2a5298;
+      color: white;
+    }
+
+    #paginationControls {
+      margin: 10px;
+    }
+
+    #paginationControls button {
+      margin: 0 5px;
+    }
+  </style>
 </head>
 <body>
-    <h1>Real-Time Sensor Graphs & Search</h1>
-    <p><a href="/display">View Full Data Tables</a></p>  
+  <h1>Real-Time Sensor Graphs & Search</h1>
+  <p><a href="/display" style="color: #aad; text-decoration: underline;">View Full Data Tables</a></p>
 
+  <div id="main-container">
     
-    <div id="main-container">
-      
-        <div id="graph-container">
-            <div>
-                <h2>LPG Levels</h2>
-                <canvas id="lpgChart"></canvas>
-            </div>
-            <div>
-                <h2>CO Levels</h2>
-                <canvas id="coChart"></canvas>
-            </div>
-            <div>
-                <h2>Methane Levels</h2>
-                <canvas id="methaneChart"></canvas>
-            </div>
-        </div>
+   <div class="chart-row">
+  <div class="chart-box">
+    <h2>LPG Levels</h2>
+    <canvas id="lpgChart"></canvas>
+  </div>
+  <div class="chart-box">
+    <h2>CO Levels</h2>
+    <canvas id="coChart"></canvas>
+  </div>
+  <div class="chart-box">
+    <h2>Methane Levels</h2>
+    <canvas id="methaneChart"></canvas>
+  </div>
+</div>
+    
+    <div id="search-container">
+      <h2>Search Readings by Date</h2>
+      <form id="searchForm">
+        <label for="searchDate">Select Date:</label>
+        <input type="date" id="searchDate" required>
+        <button type="submit">Search</button>
+      </form>
 
-        <div id="search-container">
-            <h2>Search Readings by Date</h2>
-            <form id="searchForm">
-                <label for="searchDate">Select Date:</label>
-                <input type="date" id="searchDate" required>
-                <button type="submit">Search</button>
-            </form>
-    
-            <!-- ✅ Search Results Table -->
-            <h3>Search Results</h3>
-            <table id="searchResults">
-                <thead>
-                    <tr>
-                        <th>Timestamp</th>
-                        <th>LPG</th>
-                        <th>CO</th>
-                        <th>Methane</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-            <div id="paginationControls"></div>
-        </div>
+      <h3>Search Results</h3>
+      <table id="searchResults">
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>LPG</th>
+            <th>CO</th>
+            <th>Methane</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div id="paginationControls"></div>
+    </div>
+  </div>
 
-    <script>
-        let currentPage = 1;
-        let selectedDate = null;
-    
+  <script>
+    let currentPage = 1;
+    let selectedDate = null;
+
     const ctxLPG = document.getElementById("lpgChart").getContext("2d");
     const ctxCO = document.getElementById("coChart").getContext("2d");
     const ctxMethane = document.getElementById("methaneChart").getContext("2d");
-        
-    let chartOptions = {
-        responsive: true,
-        plugins: {
-            legend: { labels: { color: "black" } }  // ✅ Legend text stays black
-        },
-        scales: {
-            x: { ticks: { color: "black" } },  // ✅ X-axis text remains visible
-            y: { ticks: { color: "black" } }   // ✅ Y-axis text remains visible
-        }
+
+    const chartOptions = {
+      responsive: true,
+      plugins: {
+        legend: { labels: { color: "black" } }
+      },
+      scales: {
+        x: { ticks: { color: "black" } },
+        y: { ticks: { color: "black" } }
+      }
     };
 
-    let lpgChart = new Chart(ctxLPG, {
-        type: "line",
-        data: { labels: [], datasets: [{ label: "LPG (ppm)", borderColor: "red", backgroundColor: "white", data: [] }] },
-        options: chartOptions
+    const lpgChart = new Chart(ctxLPG, {
+      type: "line",
+      data: {
+        labels: [],
+        datasets: [
+          { label: "LPG (measured)", borderColor: "red", data: [] },
+          { label: "LPG (predicted)", borderColor: "orange", borderDash: [5, 5], data: [] }
+        ]
+      },
+      options: chartOptions
     });
 
-    let coChart = new Chart(ctxCO, {
-        type: "line",
-        data: { labels: [], datasets: [{ label: "CO (ppm)", borderColor: "blue", backgroundColor: "white", data: [] }] },
-        options: chartOptions
+    const coChart = new Chart(ctxCO, {
+      type: "line",
+      data: {
+        labels: [],
+        datasets: [
+          { label: "CO (measured)", borderColor: "blue", data: [] },
+          { label: "CO (predicted)", borderColor: "cyan", borderDash: [5, 5], data: [] }
+        ]
+      },
+      options: chartOptions
     });
 
-    let methaneChart = new Chart(ctxMethane, {
-        type: "line",
-        data: { labels: [], datasets: [{ label: "Methane (ppm)", borderColor: "green", backgroundColor: "white", data: [] }] },
-        options: chartOptions
+    const methaneChart = new Chart(ctxMethane, {
+      type: "line",
+      data: {
+        labels: [],
+        datasets: [
+          { label: "Methane (measured)", borderColor: "green", data: [] },
+          { label: "Methane (predicted)", borderColor: "lime", borderDash: [5, 5], data: [] }
+        ]
+      },
+      options: chartOptions
     });
 
-    // ✅ Ensure fetchSensorData() runs AFTER charts are initialized
+    function fetchSensorData() {
+      Promise.all([
+        fetch('/data').then(res => res.json()),
+        fetch('/predict').then(res => res.json())
+      ])
+      .then(([data, prediction]) => {
+        const timestamps = data.mq2_sensor.map(row => row.timestamp).reverse();
+        const predTime = prediction.timestamp;
+
+        const lpg = data.mq2_sensor.map(row => row.LPG).reverse();
+        const co = data.mq2_sensor.map(row => row.CO).reverse();
+        const methane = data.mq2_sensor.map(row => row.Methane).reverse();
+
+        
+        const pad = new Array(lpg.length).fill(null);
+        const predIndex = lpg.length;
+
+        lpgChart.data.labels = timestamps.concat(predTime);
+        lpgChart.data.datasets[0].data = lpg.concat(null);
+        lpgChart.data.datasets[1].data = pad.concat(prediction.LPG);
+        lpgChart.update();
+
+        coChart.data.labels = timestamps.concat(predTime);
+        coChart.data.datasets[0].data = co.concat(null);
+        coChart.data.datasets[1].data = pad.concat(prediction.CO);
+        coChart.update();
+
+        methaneChart.data.labels = timestamps.concat(predTime);
+        methaneChart.data.datasets[0].data = methane.concat(null);
+        methaneChart.data.datasets[1].data = pad.concat(prediction.Methane);
+        methaneChart.update();
+      })
+      .catch(err => console.error("Prediction overlay error:", err));
+    }
+
     setInterval(fetchSensorData, 5000);
-    fetchSensorData();  // ✅ Load graphs on page load
+    fetchSensorData();
 
-        // ✅ Fetch and display real-time graphs
-        function fetchSensorData() {
-            fetch('/data')
-                .then(response => response.json())
-                .then(data => {
-                    const timestamps = data.mq2_sensor.map(row => row.timestamp).reverse();
     
-                    // ✅ Update LPG Chart
-                    lpgChart.data.labels = timestamps;
-                    lpgChart.data.datasets[0].data = data.mq2_sensor.map(row => row.LPG).reverse();
-                    lpgChart.update();
-    
-                    // ✅ Update CO Chart
-                    coChart.data.labels = timestamps;
-                    coChart.data.datasets[0].data = data.mq2_sensor.map(row => row.CO).reverse();
-                    coChart.update();
-    
-                    // ✅ Update Methane Chart
-                    methaneChart.data.labels = timestamps;
-                    methaneChart.data.datasets[0].data = data.mq2_sensor.map(row => row.Methane).reverse();
-                    methaneChart.update();
-                })
-                .catch(error => console.error("Error fetching graph data:", error));
-        }
-    
-        // ✅ Auto-refresh graphs every 5 seconds
-        setInterval(fetchSensorData, 5000);
-        fetchSensorData();  // ✅ Load graphs on page load
-    
-        // ✅ Fetch and display search results
-        document.getElementById("searchForm").addEventListener("submit", function(event) {
-            event.preventDefault();
-            selectedDate = document.getElementById("searchDate").value;
-            currentPage = 1;
-            fetchSearchResults();
-        });
-    
-        function fetchSearchResults() {
-            fetch(`/search_data?date=${selectedDate}&page=${currentPage}`)
-                .then(response => response.json())
-                .then(data => {
-                    let tableBody = document.querySelector("#searchResults tbody");
-                    tableBody.innerHTML = "";  
-    
-                    data.mq2_sensor.forEach(row => {
-                        let newRow = `<tr>
-                            <td>${row.time}</td>
-                            <td>${row.LPG}</td>
-                            <td>${row.CO}</td>
-                            <td>${row.Methane}</td>
-                        </tr>`;
-                        tableBody.innerHTML += newRow;
-                    });
-    
-                    updatePaginationControls(data.page, data.total_pages);
-                })
-                .catch(error => console.error("Error fetching search data:", error));
-        }
-    
-        function updatePaginationControls(current, total) {
-            let paginationDiv = document.getElementById("paginationControls");
-            paginationDiv.innerHTML = "";  
-    
-            if (current > 1) {
-                paginationDiv.innerHTML += `<button onclick="changePage(${current - 1})">Previous</button>`;
-            }
-    
-            paginationDiv.innerHTML += ` Page ${current} of ${total} `;
-    
-            if (current < total) {
-                paginationDiv.innerHTML += `<button onclick="changePage(${current + 1})">Next</button>`;
-            }
-        }
-    
-        function changePage(newPage) {
-            currentPage = newPage;
-            fetchSearchResults();
-        }
-    </script>
-    
-    
+    document.getElementById("searchForm").addEventListener("submit", function(event) {
+      event.preventDefault();
+      selectedDate = document.getElementById("searchDate").value;
+      currentPage = 1;
+      fetchSearchResults();
+    });
 
+    function fetchSearchResults() {
+      fetch(`/search_data?date=${selectedDate}&page=${currentPage}`)
+        .then(response => response.json())
+        .then(data => {
+          const tbody = document.querySelector("#searchResults tbody");
+          tbody.innerHTML = "";
+          data.mq2_sensor.forEach(row => {
+            tbody.innerHTML += `
+              <tr>
+                <td>${row.time}</td>
+                <td>${row.LPG}</td>
+                <td>${row.CO}</td>
+                <td>${row.Methane}</td>
+              </tr>`;
+          });
+          updatePaginationControls(data.page, data.total_pages);
+        })
+        .catch(err => console.error("Error fetching search results:", err));
+    }
+
+    function updatePaginationControls(current, total) {
+      const container = document.getElementById("paginationControls");
+      container.innerHTML = "";
+      if (current > 1) {
+        container.innerHTML += `<button onclick="changePage(${current - 1})">Previous</button>`;
+      }
+      container.innerHTML += ` Page ${current} of ${total} `;
+      if (current < total) {
+        container.innerHTML += `<button onclick="changePage(${current + 1})">Next</button>`;
+      }
+    }
+
+    function changePage(newPage) {
+      currentPage = newPage;
+      fetchSearchResults();
+    }
+  </script>
 </body>
 </html>
